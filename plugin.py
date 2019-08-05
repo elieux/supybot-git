@@ -133,7 +133,6 @@ class Repository(object):
 
     @synchronized('lock')
     def fetch(self):
-        "Contact git repository and update last_commit appropriately."
         self.repo.git.fetch()
 
     @synchronized('lock')
@@ -339,18 +338,6 @@ class Git(callbacks.PluginRegexp):
                 'url': r.url,
             })
     repositories = wrap(repositories, ['channel'])
-
-    def gitrehash(self, irc, msg, args):
-        "Obsolete command, remove this function eventually."
-        irc.reply('"gitrehash" is obsolete, please use "rehash".')
-
-    def repolist(self, irc, msg, args):
-        "Obsolete command, remove this function eventually."
-        irc.reply('"repolist" is obsolete, please use "repositories".')
-
-    def shortlog(self, irc, msg, args):
-        "Obsolete command, remove this function eventually."
-        irc.reply('"shortlog" is obsolete, please use "log".')
 
     # Overridden to hide the obsolete commands
     def listCommands(self, pluginCommands=[]):

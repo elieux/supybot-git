@@ -11,18 +11,6 @@ monitor Git repositories.  Features:
   other channels.
 * Highly configurable.
 
-NEWS
-----
-
-### November 17, 2012
-
-Interface changes:
-
-* Several commands have been renamed.  Sorry for the inconvenience, but it was
-  time to make some common sense usabliity improvements.
-* Repository definitions now take a `channels` option instead of a single
-  `channel` (although `channel` is supported for backwards compatibility).
-
 Dependencies
 ------------
 
