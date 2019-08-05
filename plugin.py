@@ -97,7 +97,7 @@ class Repository(object):
             if name not in options:
                 raise Exception('Section %s missing required value: %s' %
                         (long_name, name))
-        for name, value in list(options.items()):
+        for name, value in options.items():
             if name not in required_values and name not in optional_values:
                 raise Exception('Section %s contains unrecognized value: %s' %
                         (long_name, name))
@@ -214,7 +214,7 @@ class Repository(object):
             outline = ''
             for c in line:
                 if mode == MODE_SUBST:
-                    if c in list(subst.keys()):
+                    if c in subst.keys():
                         outline += subst[c]
                         mode = MODE_NORMAL
                     elif c == '(':
