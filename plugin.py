@@ -366,7 +366,8 @@ class Git(callbacks.PluginRegexp):
         format_str = repository.commit_reply or repository.commit_message
         for commit in commits[-commits_at_once:]:
             lines = repository.format_message(commit, format_str)
-            list(map(irc.reply, lines))
+            for line in lines:
+                irc.reply(line)
 
     def _poll(self):
         # Note that polling happens in two steps:
