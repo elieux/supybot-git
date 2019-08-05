@@ -42,10 +42,6 @@ import time
 import traceback
 
 # 'import git' is performed during plugin initialization.
-#
-# The GitPython library has different APIs depending on the version installed.
-# (0.1.x, 0.3.x supported)
-GIT_API_VERSION = -1
 
 def log_info(message):
     log.info("Git: " + message)
@@ -93,9 +89,6 @@ class Repository(object):
         Initialize with a repository with the given name and dict of options
         from the config section.
         """
-        if GIT_API_VERSION == -1:
-            raise Exception("Git-python API version uninitialized.")
-
         # Validate configuration ("channel" allowed for backward compatibility)
         required_values = ['short name', 'url']
         optional_values = ['branch', 'channel', 'channels', 'commit link',
@@ -157,36 +150,18 @@ class Repository(object):
 
     @synchronized('lock')
     def get_commit_id(self, commit):
-        if GIT_API_VERSION == 1:
-            return commit.id
-        elif GIT_API_VERSION == 3:
-            return commit.hexsha
-        else:
-            raise Exception("Unsupported API version: %d" % GIT_API_VERSION)
+        return commit.hexsha
 
     @synchronized('lock')
     def get_new_commits(self):
-        if GIT_API_VERSION == 1:
-            result = self.repo.commits_between(self.last_commit, self.branch)
-        elif GIT_API_VERSION == 3:
-            rev = "%s..%s" % (self.last_commit, self.branch)
-            # Workaround for GitPython bug:
-            # https://github.com/gitpython-developers/GitPython/issues/61
-            self.repo.odb.update_cache()
-            result = self.repo.iter_commits(rev)
-        else:
-            raise Exception("Unsupported API version: %d" % GIT_API_VERSION)
+        rev = "%s..%s" % (self.last_commit, self.branch)
+        result = self.repo.iter_commits(rev)
         self.last_commit = self.repo.commit(self.branch)
         return list(result)
 
     @synchronized('lock')
     def get_recent_commits(self, count):
-        if GIT_API_VERSION == 1:
-            return self.repo.commits(start=self.branch, max_count=count)
-        elif GIT_API_VERSION == 3:
-            return list(self.repo.iter_commits(self.branch))[:count]
-        else:
-            raise Exception("Unsupported API version: %d" % GIT_API_VERSION)
+        return list(self.repo.iter_commits(self.local_branch))[:count]
 
     @synchronized('lock')
     def format_link(self, commit):
@@ -300,18 +275,11 @@ class Git(callbacks.PluginRegexp):
         self._schedule_next_event()
 
     def init_git_python(self):
-        global GIT_API_VERSION, git
+        global git
         try:
             import git
         except ImportError:
             raise Exception("GitPython is not installed.")
-        if not git.__version__.startswith('0.'):
-            raise Exception("Unsupported GitPython version.")
-        GIT_API_VERSION = int(git.__version__[2])
-        if not GIT_API_VERSION in [1, 3]:
-            log_error('GitPython version %s unrecognized, using 0.3.x API.'
-                    % git.__version__)
-            GIT_API_VERSION = 3
 
     def die(self):
         self._stop_polling()

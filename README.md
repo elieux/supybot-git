@@ -28,7 +28,7 @@ Dependencies
 
 This plugin depends on the Python packages:
 
-* GitPython (supports 0.1.x and 0.3.x)
+* GitPython
 * Mock (if you want to run the tests)
 
 Dependencies are also listed in `requirements.txt`.  You can install them with
