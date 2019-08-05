@@ -233,7 +233,7 @@ class Repository(object):
                     mode = MODE_SUBST
                 else:
                     outline += c
-            result.append(outline.encode('utf-8'))
+            result.append(outline)
         return result
 
     @synchronized('lock')
