@@ -103,13 +103,13 @@ class Repository(object):
                         (long_name, name))
 
         # Initialize
-        self.branch = 'origin/' + options.get('branch', 'master')
+        self.local_branch = options.get('branch', 'master')
+        self.remote_branch = 'origin/' + options.get('branch', 'master')
         self.channels = options.get('channels', options.get('channel')).split()
         self.commit_link = options.get('commit link', '')
         self.commit_message = options.get('commit message', '[%s|%b|%a] %m')
         self.commit_reply = options.get('commit reply', '')
         self.errors = []
-        self.last_commit = None
         self.lock = threading.RLock()
         self.long_name = long_name
         self.short_name = options['short name']
@@ -127,9 +127,8 @@ class Repository(object):
     def clone(self):
         "If the repository doesn't exist on disk, clone it."
         if not os.path.exists(self.path):
-            git.Git('.').clone(self.url, self.path, no_checkout=True)
+            git.Repo.clone_from(self.url, self.path, no_checkout = True, branch = self.local_branch)
         self.repo = git.Repo(self.path)
-        self.last_commit = self.repo.commit(self.branch)
 
     @synchronized('lock')
     def fetch(self):
@@ -153,9 +152,9 @@ class Repository(object):
 
     @synchronized('lock')
     def get_new_commits(self):
-        rev = "%s..%s" % (self.last_commit, self.branch)
+        rev = "%s..%s" % (self.local_branch, self.remote_branch)
         result = self.repo.iter_commits(rev)
-        self.last_commit = self.repo.commit(self.branch)
+        git.refs.head.HEAD(self.repo).reset(self.remote_branch, index = False)
         return list(result)
 
     @synchronized('lock')
@@ -193,7 +192,7 @@ class Repository(object):
         MODE_COLOR = 2
         subst = {
             'a': commit.author.name,
-            'b': self.branch[self.branch.rfind('/')+1:],
+            'b': self.local_branch,
             'c': self.get_commit_id(commit)[0:7],
             'C': self.get_commit_id(commit),
             'e': commit.author.email,
@@ -332,7 +331,7 @@ class Git(callbacks.PluginRegexp):
         for r in repositories:
             fmt = '\x02%(short_name)s\x02 (%(name)s, branch: %(branch)s)'
             irc.reply(fmt % {
-                'branch': r.branch.split('/')[-1],
+                'branch': r.local_branch,
                 'name': r.long_name,
                 'short_name': r.short_name,
                 'url': r.url,
