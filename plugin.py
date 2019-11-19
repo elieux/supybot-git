@@ -145,6 +145,8 @@ class Repository(object):
             return None
         except git.BadObject: # 0.3.2
             return None
+        except git.BadName:
+            return None
 
     @synchronized('lock')
     def get_commit_id(self, commit):
