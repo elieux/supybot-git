@@ -76,6 +76,11 @@ Let's break down the possible settings:
   polling-triggered events).  If empty, your `commit message` format will be
   used.  Default: (empty string)
 
+* `skip new commits regex`: *Optional* A Python-compatible regular expression.
+  When specified, it's applied to new commits' messages and only those that
+  don't match will be reported.  This doesn't affect log retrieval or any other
+  functions.
+
 Commit Messages
 ---------------
 

@@ -36,6 +36,7 @@ import supybot.world as world
 
 import configparser
 from functools import wraps
+import re
 import os
 import threading
 import time
@@ -92,7 +93,7 @@ class Repository(object):
         # Validate configuration ("channel" allowed for backward compatibility)
         required_values = ['short name', 'url']
         optional_values = ['branch', 'channel', 'channels', 'commit link',
-                           'commit message', 'commit reply']
+                           'commit message', 'commit reply', 'skip new commits regex']
         for name in required_values:
             if name not in options:
                 raise Exception('Section %s missing required value: %s' %
@@ -109,6 +110,8 @@ class Repository(object):
         self.commit_link = options.get('commit link', '')
         self.commit_message = options.get('commit message', '[%s|%b|%a] %m')
         self.commit_reply = options.get('commit reply', '')
+        regex = re.compile(options.get('skip new commits regex', ''))
+        self.new_commits_filter = (lambda commit: not regex.match(commit.message)) if regex.pattern else (lambda commit: True)
         self.errors = []
         self.lock = threading.RLock()
         self.long_name = long_name
@@ -157,7 +160,7 @@ class Repository(object):
         rev = "%s..%s" % (self.local_branch, self.remote_branch)
         result = self.repo.iter_commits(rev)
         git.refs.head.HEAD(self.repo).reset(self.remote_branch, index = False)
-        return list(result)
+        return [ commit for commit in result if self.new_commit_filter(commit) ]
 
     @synchronized('lock')
     def get_recent_commits(self, count):
